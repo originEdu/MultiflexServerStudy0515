@@ -58,12 +58,14 @@ int main()
 		for (int i = 0; i < (int)ReadSockets.fd_count; ++i)
 		{
 			//변경된점 있냐?
+			//현재 소켓이 CopyReadSockets에 남아있는지 확인
+			//남아있으면 변경된 것임
 			if (FD_ISSET(ReadSockets.fd_array[i], &CopyReadSockets))
 			{
 				//그거 리슨이냐?
 				if (ReadSockets.fd_array[i] == ListenSocket)
 				{
-					//맞으면 accept
+					//맞으면 accept(새로운 클라이언트 접속 처리)
 					SOCKET ClientSocket = accept(ListenSocket, (SOCKADDR*)&ClientSockAddr, &ClientSockAddrLength);
 					printf("클라연결됨\n");
 					FD_SET(ClientSocket,&ReadSockets); //클라소켓도 감시해주세요
