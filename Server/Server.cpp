@@ -89,12 +89,12 @@ int main()
 							if (ReadSockets.fd_array[j] != ListenSocket)
 							{
 								int SendBytes = send(ReadSockets.fd_array[j], Buffer, (int)strlen(Buffer), 0);
-								//굳이 이 부분이 필요한가?
 								if (SendBytes<=0)
 								{
 									closesocket(ReadSockets.fd_array[j]);
 									FD_CLR(ReadSockets.fd_array[j], &ReadSockets);
 									printf("클라종료됨\n");
+									j--;
 								}
 							}
 						}
