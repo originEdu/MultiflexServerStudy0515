@@ -29,18 +29,18 @@ int main()
 	fd_set ReadSockets; //집합선언
 	fd_set CopyReadSockets; //select인자에 넣을 복사본
 	FD_ZERO(&ReadSockets); //초기화
-	FD_SET(ListenSocket, &ReadSockets); //감시할녀석, 등록할 fd배열
+	FD_SET(ListenSocket, &ReadSockets); //(감시할녀석, 등록할 fdset)
 	//-> 리슨 소켓 감시해달라고 한거임
 
-	struct timeval TimeOut;
-	TimeOut.tv_sec = 0; // 0초
-	TimeOut.tv_usec = 100000; // 0.1초, 단위가 마이크로초임
-	
-	
-	//클라주소 설정
+	//accept클라주소 설정
 	SOCKADDR_IN ClientSockAddr;
 	memset(&ClientSockAddr, 0, sizeof(ClientSockAddr));
 	int ClientSockAddrLength = sizeof(ClientSockAddr);
+
+	//select TimeOut 설정
+	struct timeval TimeOut;
+	TimeOut.tv_sec = 0; // 0초
+	TimeOut.tv_usec = 100000; // 0.1초, 단위가 마이크로초임
 	while (true)
 	{
 		CopyReadSockets = ReadSockets;
@@ -58,7 +58,7 @@ int main()
 		for (int i = 0; i < (int)ReadSockets.fd_count; ++i)
 		{
 			//변경된점 있냐?
-			if (FD_ISSET(ReadSockets.fd_array[i], &ReadSockets))
+			if (FD_ISSET(ReadSockets.fd_array[i], &CopyReadSockets))
 			{
 				//그거 리슨이냐?
 				if (ReadSockets.fd_array[i] == ListenSocket)
@@ -78,20 +78,33 @@ int main()
 						//소켓닫고 ReadSockets에서 소켓 제거
 						closesocket(ReadSockets.fd_array[i]);
 						FD_CLR(ReadSockets.fd_array[i],&ReadSockets);
+						printf("클라종료됨\n");
 					}
 					else //메세지가 온거임
 					{
-						printf("%s", Buffer);
+						printf("%s\n", Buffer);
+						//받은 메시지 모두에게 전송
+						for (int j = 0; j < (int)ReadSockets.fd_count; ++j)
+						{
+							if (ReadSockets.fd_array[j] != ListenSocket)
+							{
+								int SendBytes = send(ReadSockets.fd_array[j], Buffer, (int)strlen(Buffer), 0);
+								//굳이 이 부분이 필요한가?
+								if (SendBytes<=0)
+								{
+									closesocket(ReadSockets.fd_array[j]);
+									FD_CLR(ReadSockets.fd_array[j], &ReadSockets);
+									printf("클라종료됨\n");
+								}
+							}
+						}
 					}
 				}
 			}
 		}
-		
-
 	}
-	
 
-
+	closesocket(ListenSocket);
 	WSACleanup();
 	return 0;
 }
