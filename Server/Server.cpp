@@ -72,7 +72,7 @@ int main()
 				}
 				else
 				{
-					//아니면 자료구나 recv
+					//아니면 자료구나 recv(데이터 수신)
 					char Buffer[1024] = { 0 };
 					int RecvBytes = recv(ReadSockets.fd_array[i], Buffer, sizeof(Buffer), 0);
 					if (RecvBytes<=0) //접속이 끊겼거나 네트워크오류
